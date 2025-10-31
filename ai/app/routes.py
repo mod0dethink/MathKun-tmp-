@@ -1,18 +1,22 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, current_app
+from PIL import Image
+import io
 import torch
-import numpy as np
+from .utils import preprocess_image
 
-bp = Blueprint('main', __name__)
+bp = Blueprint('bp', __name__)
 
 @bp.route("/predict", methods=["POST"])
 def predict():
-    # 画像データを JSON で受け取る（28x28 のグレースケールを仮定）
-    data = request.json
-    img_array = np.array(data['image'], dtype=np.float32)  # list -> np.array
-    img_tensor = torch.tensor(img_array).unsqueeze(0).unsqueeze(0)  # [B, C, H, W]
+    if 'image' not in request.files:
+        return jsonify({"error": "No image provided"}), 400
+
+    file = request.files['image']
+    img = Image.open(file.stream).convert('L')  # モノクロに変換
+    tensor = preprocess_image(img)
 
     with torch.no_grad():
-        output = bp.model(img_tensor)
-        pred = output.argmax(dim=1).item()
+        output = current_app.model(tensor)  # current_app からモデルを取得
+        prediction = output.argmax(dim=1).item()
 
-    return jsonify({"prediction": pred})
+    return jsonify({"prediction": prediction})
