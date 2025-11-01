@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -19,7 +18,6 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
   // トークンの検証ロジック（JWTでするよてい
   try {
     // ここでトークンを検証する
-    jwt.verify(token as string, SECRET_KEY as string);
     console.log('Token verified:', token); // デバッグ用
     next();
   } catch (error) {

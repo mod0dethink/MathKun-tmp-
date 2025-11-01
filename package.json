@@ -2,5 +2,10 @@
   "dependencies": {
     "react-router-dom": "^7.9.5",
     "router-dom": "^3.0.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.9.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }
