@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import dotenv from 'dotenv';
+import jsonwebtoken from 'jsonwebtoken';
 
 dotenv.config();
 
@@ -15,9 +16,11 @@ const authMiddleware = (req: Request, res: Response, next: NextFunction) => {
     return res.status(401).json({ message: 'Tokenが必要です' });
   }
 
-  // トークンの検証ロジック（JWTでするよてい
+  // トークンの検証ロジック
   try {
     // ここでトークンを検証する
+    const decoded = jsonwebtoken.verify(token, SECRET_KEY!);
+    (req as any).user = decoded; // デコードした情報をcontrollerに渡すよ
     console.log('Token verified:', token); // デバッグ用
     next();
   } catch (error) {

@@ -1,11 +1,13 @@
-import {Reuqest, Response} from 'express';
+import { error } from "console";
+import  {Request, Response } from "express";
 
 export const loginController = {
-    async login(req: Request, res: Response) {
-        try {
-            const {username, password} = req.body;
-            // const token = await loginService.authenticate(username, password);
-            // res.status(200).json({token});
-        }
+  async login(req: Request, res: Response) {
+    try {
+      const user = (req as any).user;
+    } catch (err) {
+      error("Login error:", err);
+      res.status(500).json({ message: "Internal server error" });
     }
-}
+  },
+};
