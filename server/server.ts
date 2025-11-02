@@ -9,7 +9,7 @@ app.use(express.json());
 
 // ルートエンドポイント
 app.get('/', (req: Request, res: Response) => {
-  res.send('hi');
+  res.send('hi UNTI can you see the change?');
 });
 
 // サーバーの起動
