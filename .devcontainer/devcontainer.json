@@ -1,22 +1,14 @@
 {
-  "name": "My Dev Container",
-  "dockerFile": "Dockerfile",
-  "context": "..",
-  "workspaceFolder": "/workspace",
-  "mounts": [
-    "source=${localWorkspaceFolder},target=/workspace,type=bind"
-  ],
-  "forwardPorts": [8000, 5173],
-  "postCreateCommand": "npm install --prefix server && npm install --prefix client",
+  "name": "GO Development Container",
+  "build": {
+    "context": "..",
+    "dockerfile": "../.devcontainer/Dockerfile"
+  },
+  "remoteUser": "vscode",
+  "updateRemoteUserUID": true,
   "customizations": {
     "vscode": {
-      "settings": {
-        "terminal.integrated.shell.linux": "/bin/bash"
-      },
-      "extensions": [
-        "dbaeumer.vscode-eslint",
-        "esbenp.prettier-vscode"
-      ]
+      "extensions": ["golang.go"]
     }
   }
 }
