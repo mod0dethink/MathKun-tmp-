@@ -1,11 +1,12 @@
 package main
 
 import (
-    "fmt"
-    "hello_world_go/pkg/hello"
+	"example.com/mathkun-tmp-/server/router"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-    message := hello.SayHello()
-    fmt.Println(message)
+	r := gin.Default()
+	router.SetupRouter(r)
+	r.Run(":8000")
 }
