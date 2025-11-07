@@ -1,14 +1,19 @@
 {
-  "name": "GO Development Container",
-  "build": {
-    "context": "..",
-    "dockerfile": "../.devcontainer/Dockerfile"
+  "name": "Go + MySQL DevContainer",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspaces/MathKunTmp",
+  "features": {
+    "ghcr.io/devcontainers/features/go:1": {
+      "version": "1.24"
+    }
   },
-  "remoteUser": "vscode",
-  "updateRemoteUserUID": true,
   "customizations": {
     "vscode": {
+      "settings": {},
       "extensions": ["golang.go"]
     }
-  }
+  },
+  "forwardPorts": [8080, 3306],
+  "postCreateCommand": "go mod tidy"
 }
