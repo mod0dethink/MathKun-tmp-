@@ -7,6 +7,6 @@ import (
 
 // 増えてきたらここでルーティングをまとめて他はわける
 func SetupUserRoutes(r *gin.Engine) {
-	r.GET("/users", handlers.GetUsers)
 	r.POST("/signup", handlers.SignUp)
+	r.POST("/login", handlers.Login)
 }

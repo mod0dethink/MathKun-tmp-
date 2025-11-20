@@ -1,4 +1,4 @@
-{
+﻿{
   "name": "Go + MySQL DevContainer",
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",

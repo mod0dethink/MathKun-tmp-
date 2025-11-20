@@ -1,7 +1,10 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+	"time"
 
 	"example.com/mathkun-tmp-/server/db"
 	"example.com/mathkun-tmp-/server/models"
@@ -11,47 +14,80 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-func GetUsers(c *gin.Context) {
-	users := []string{"Alice", "Bob", "Sena"}
-	c.JSON(http.StatusOK, gin.H{"users": users})
+type UserClaims struct {
+	Username string `json:"username"`
+	jwt.RegisteredClaims
 }
 
 func SignUp(c *gin.Context) {
-	// サインアップのロジックをここに実装予定
 	var user models.User
-	c.ShouldBindJSON(&user) // JSONデータをUser構造体にバインド
+	if err := c.ShouldBindJSON(&user); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
+		return
+	}
 
-	// パスワードのハッシュ化
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), 10)
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to hash password"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to hash password"})
 		return
 	}
 
 	user.Password = string(hashedPassword)
-	db.DB.Create(&user) // ユーザーをデータベースに保存(あとで変える)
+	if err := db.DB.Create(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create user"})
+		return
+	}
 
-	c.JSON(http.StatusOK, user)
+	c.JSON(http.StatusCreated, gin.H{
+		"id":       user.ID,
+		"username": user.Username,
+	})
 }
 
 func Login(c *gin.Context) {
-	// ログインのロジックをここに実装予定
-	var user models.User
-	c.ShouldBindJSON(&user) // JSONデータをUser構造体にバインド
-	var username string
-	username = user.Username
-
-	// Claims構造体の定義
-	var Claims struct {
-		Username string
-		jwt.RegisteredClaims
+	var credentials struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+	if err := c.ShouldBindJSON(&credentials); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
+		return
 	}
 
-	// Claimsにユーザー情報をセット
+	var user models.User
+	if err := db.DB.Where("username = ?", credentials.Username).First(&user).Error; err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid username or password"})
+		return
+	}
 
-	token, err ,:= jwt.CreateWithClaims(jwt.SigningMethodHS256,Claims)
-	// jwtでToken発行
-	c.JSON(http.StatusOK, gin.H{"message": "User logged in successfully"})
+	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(credentials.Password)); err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid username or password"})
+		return
+	}
 
-}
+	// JWTがなぜかENVから取得できない問題発生中
+	secret := os.Getenv("JWT_SECRET")
+	print("aiueo", secret)
+	if secret == "" {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "JWT secret not configured"})
+		return
+	}
+
+	claims := UserClaims{
+		Username: user.Username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   fmt.Sprintf("%d", user.ID),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	signedToken, err := token.SignedString([]byte(secret))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to sign token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"token": signedToken})
 }

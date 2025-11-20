@@ -6,7 +6,12 @@ import (
 	"example.com/mathkun-tmp-/server/router"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
+
+func init() {
+	godotenv.Load()
+}
 
 func main() {
 	db.Init()
